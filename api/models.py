@@ -10,7 +10,8 @@ class Trip(models.Model):
     destination = models.CharField(max_length=255, null=False, blank=False)
     departure_date = models.DateField()
     departure_time = models.TimeField()
-    creator = models.OneToOneField(User, on_delete=models.DO_NOTHING)
+    creator = models.ForeignKey(
+        User, on_delete=models.DO_NOTHING, related_name='created_trips')
     status = models.CharField(max_length=50, null=False, blank=False)
     details = models.TextField(null=True, blank=True)
     vendor = models.CharField(max_length=255, null=False, blank=False)

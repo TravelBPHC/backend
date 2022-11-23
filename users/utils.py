@@ -6,7 +6,7 @@ import jwt
 
 def get_user(request):
 
-    token = request.session.get('token')
+    token = str(request.headers['Authorization'].split(" ")[1])
     decoded = jwt.decode(
         token, key=settings.SECRET_KEY, algorithms=["HS256"])
     user_id = decoded['id']

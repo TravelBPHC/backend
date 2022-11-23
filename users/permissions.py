@@ -10,7 +10,7 @@ class IsLoggedIn(permissions.BasePermission):
     message = 'User needs to be logged in'
 
     def has_permission(self, request, view):
-        token = request.session.get('token')
+        token = str(request.headers['Authorization'].split(" ")[1])
         if token is None:
             raise NotLoggedIn()
         else:

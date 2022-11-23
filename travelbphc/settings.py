@@ -6,8 +6,21 @@ SECRET_KEY = 'django-insecure-@a=v_m_p1((1pp8w48h2$*xz_@k4gty*y8_rzm+m!q*wr1mq2t
 
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    '2c74-2401-4900-60e8-f9c4-b520-6bf5-6137-acd1.in.ngrok.io', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['*']
+
+CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken', 'Set-Cookie']
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = (
@@ -33,6 +46,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

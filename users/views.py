@@ -1,15 +1,10 @@
-import base64
-import json
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.contrib.auth import authenticate
 from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework import status
 from .utils import get_user
 from .serializers import CustomUserSerializer
-from .models import CustomUser
 from google.auth.transport import requests
 from google.oauth2 import id_token
 from random import randint
@@ -44,11 +39,13 @@ class AuthenticateView(APIView):
                 user.customuser.pfp = pfp
                 user.save()
 
-                response.data = {
-                    "created": f"User with the email ID {email} created"}
                 token = jwt.encode(payload={"id": user.id},
                                    key=settings.SECRET_KEY, algorithm="HS256")
                 request.session['token'] = str(token)
+                response.data = {
+                    "created": f"User with the email ID {email} created",
+                    "token": str(token)
+                }
                 response.status = status.HTTP_201_CREATED
 
                 return response
@@ -59,7 +56,9 @@ class AuthenticateView(APIView):
                                    key=settings.SECRET_KEY, algorithm="HS256")
                 request.session['token'] = str(token)
                 response.data = {
-                    "success": f"User with email ID {email} logged in successfully"}
+                    "success": f"User with email ID {email} logged in successfully",
+                    "token": str(token)
+                }
                 response.status = status.HTTP_200_OK
                 return response
 

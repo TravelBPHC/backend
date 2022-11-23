@@ -6,6 +6,7 @@ from users.utils import get_user
 from .serializers import TripSerializer, RequestSerializer
 from users.permissions import IsLoggedIn
 from .models import Trip, Request
+from django.contrib.auth.models import User
 
 
 class PastTripsView(ListAPIView):
@@ -45,6 +46,13 @@ class TripCreateView(CreateAPIView):
 
         trip = Trip.objects.create(source=source, destination=destination, departure_date=departure_date,
                                    departure_time=departure_time, waiting_time=waiting_time, vendor=vendor, seats=seats, details=details, creator=user, status="Unconfirmed")
+
+        confirmed_passengers = request.data.get('passengers')
+        print(confirmed_passengers)
+        for passenger_email in confirmed_passengers:
+            print(passenger_email)
+            temp = User.objects.get(email=passenger_email)
+            trip.users_confirmed.add(temp.customuser)
 
         trip.save()
 
