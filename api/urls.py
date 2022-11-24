@@ -4,9 +4,10 @@ from . import trip_views, request_views
 urlpatterns = [
 
     # trip URLs
-    path('past', trip_views.PastTripsView.as_view(), name='past_trips'),
-    path('upcoming', trip_views.UpcomingTripsView.as_view(), name='upcoming_trips'),
-    path('create-trip', trip_views.TripCreateView.as_view(), name='create_trip'),
+    path('trip/past', trip_views.PastTripsView.as_view(), name='past_trips'),
+    path('trip/upcoming', trip_views.UpcomingTripsView.as_view(),
+         name='upcoming_trips'),
+    path('trip/create', trip_views.TripCreateView.as_view(), name='create_trip'),
     path('trip/<int:id>', trip_views.TripDetailView.as_view(), name='trip_detail'),
     path('trip/update/<int:pk>',
          trip_views.TripUpdateView.as_view(), name='trip_update'),

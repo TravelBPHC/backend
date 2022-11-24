@@ -57,8 +57,7 @@ class RequestReceivedView(APIView):
         signer = Signer(salt=str(settings.SECRET_KEY))
         signed_email = signer.sign_object({"email": requestor.email})
         html_body = get_template('request_received.html')
-        accept_link = f"http://127.0.0.1:8000/api/request/accept?id={signed_email}&pid={trip_id}&rid={req.id}&plink={post_link}"
-        reject_link = f"http://127.0.0.1:8000/api/request/reject?id={signed_email}&pid={trip_id}&rid={req.id}&plink={post_link}"
+        action_link = f"http://127.0.0.1:3000/request-approval?id={signed_email}&pid={trip_id}&rid={req.id}&plink={post_link}"
 
         context = {
             "receiver": creator,
@@ -68,14 +67,13 @@ class RequestReceivedView(APIView):
             "destination": str(trip.destination),
             "departure_date": str(trip.departure_date),
             "departure_time": str(trip.departure_time),
-            "accept_link": str(accept_link),
-            "reject_link": str(reject_link)
+            "action_link": str(action_link)
         }
 
         body = html_body.render(context)
         message = EmailMultiAlternatives(
             subject=f'Travel@BPHC - New request by {requestor.first_name}',
-            body=f'Hey {creator.first_name}, {requestor.first_name} has requested to travel along with you on this trip: {post_link}\n\nTo accept, click on this link: {accept_link}, to reject, click here: {reject_link}',
+            body=f'Hey {creator.first_name}, {requestor.first_name} has requested to travel along with you on this trip: {post_link}\n\nTo accept or reject, click on this link: {action_link}',
             to=[creator.email],
             from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
         )

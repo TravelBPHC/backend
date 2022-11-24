@@ -9,6 +9,7 @@ from google.auth.transport import requests
 from google.oauth2 import id_token
 from random import randint
 from .permissions import IsLoggedIn
+from decouple import config
 import jwt
 
 
@@ -21,7 +22,7 @@ class AuthenticateView(APIView):
         if token is not None:
 
             info = id_token.verify_oauth2_token(
-                token, requests.Request(), '980575440299-7v5ap704i43iao1v61atqs3872f1mifr.apps.googleusercontent.com')
+                token, requests.Request(), config('CLIENT_ID'))
 
             email, first_name, pfp, last_name = info['email'], info.get(
                 'given_name', None), info['picture'], info.get("family_name", "")
