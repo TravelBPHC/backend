@@ -12,7 +12,8 @@ class Trip(models.Model):
     departure_time = models.TimeField()
     creator = models.ForeignKey(
         User, on_delete=models.DO_NOTHING, related_name='created_trips')
-    status = models.CharField(max_length=50, null=False, blank=False)
+    status = models.CharField(
+        max_length=50, null=False, blank=False, help_text='Upcoming or Past')
     details = models.TextField(null=True, blank=True)
     vendor = models.CharField(max_length=255, null=False, blank=False)
     seats = models.IntegerField(default=0)
@@ -29,7 +30,8 @@ class Request(models.Model):
     destination = models.CharField(max_length=255, null=False, blank=False)
     departure_date = models.DateField()
     departure_time = models.TimeField()
-    status = models.CharField(max_length=50, null=False, blank=False)
+    status = models.CharField(
+        max_length=50, null=False, blank=False, help_text='Unconfirmed, Accepted or Rejected')
     sender = models.ForeignKey(
         User, on_delete=models.DO_NOTHING, related_name='sent_requests')
     receiver = models.ForeignKey(

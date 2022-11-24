@@ -9,6 +9,12 @@ from .models import Trip
 from django.contrib.auth.models import User
 
 
+class AllPostsView(ListAPIView):
+
+    queryset = Trip.objects.filter(status="Upcoming")
+    serializer_class = TripSerializer
+
+
 class PastTripsView(ListAPIView):
 
     permission_classes = [IsLoggedIn]

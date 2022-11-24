@@ -9,15 +9,17 @@ class TripSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Trip
-        fields = ['source', 'destination', 'departure_date',
+        fields = ['id', 'source', 'destination', 'departure_date',
                   'departure_time', 'status', 'details', 'seats', 'waiting_time', 'creator', 'passengers']
 
     def get_creator(self, obj):
+        pn = obj.creator.customuser.phone
+        phone = pn.as_e164
         return {
             "email": obj.creator.email,
             "name": obj.creator.first_name,
             "pfp": obj.creator.customuser.pfp,
-            "phone": obj.creator.customuser.phone
+            "phone": str(phone)
         }
 
     def get_passengers(self, obj):
@@ -29,8 +31,7 @@ class TripSerializer(serializers.ModelSerializer):
         return [{
             "name": passenger.user.first_name,
             "email": passenger.user.email,
-            "pfp": passenger.pfp,
-            "phone": passenger.phone
+            "pfp": passenger.pfp
         } for passenger in qs]
 
 
@@ -45,17 +46,21 @@ class RequestSerializer(serializers.ModelSerializer):
                   'departure_time', 'status', 'sender', 'receiver']
 
     def get_receiver(self, obj):
+        pn = obj.receiver.customuser.phone
+        phone = pn.as_e164
         return {
             "email": obj.receiver.email,
             "name": obj.receiver.first_name,
             "pfp": obj.receiver.customuser.pfp,
-            "phone": obj.receiver.customuser.phone
+            "phone": str(phone)
         }
 
     def get_sender(self, obj):
+        pn = obj.sender.customuser.phone
+        phone = pn.as_e164
         return {
             "email": obj.sender.email,
             "name": obj.sender.first_name,
             "pfp": obj.sender.customuser.pfp,
-            "phone": obj.sender.customuser.phone
+            "phone": str(phone)
         }
