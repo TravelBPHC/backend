@@ -1,8 +1,10 @@
 from pathlib import Path
+from decouple import config
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-@a=v_m_p1((1pp8w48h2$*xz_@k4gty*y8_rzm+m!q*wr1mq2t'
+SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = True
 
@@ -26,7 +28,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = (
     'http://localhost',
     'http://127.0.0.1',
-    'https://2c74-2401-4900-60e8-f9c4-b520-6bf5-6137-acd1.in.ngrok.io',)
+)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -56,12 +58,21 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# email settings:
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = config('HOST_MAIL')
+EMAIL_HOST_PASSWORD = config('HOST_PASS')
+
 ROOT_URLCONF = 'travelbphc.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

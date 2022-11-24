@@ -3,9 +3,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from users.utils import get_user
-from .serializers import TripSerializer, RequestSerializer
+from .serializers import TripSerializer
 from users.permissions import IsLoggedIn
-from .models import Trip, Request
+from .models import Trip
 from django.contrib.auth.models import User
 
 
@@ -38,16 +38,18 @@ class TripCreateView(CreateAPIView):
     def post(self, request):
 
         user = get_user(request)
+        data = request.data
 
-        source, destination, departure_date, departure_time = request.data.get('source'), request.data.get(
-            'destination'), request.data.get('departure_date'), request.data.get('departure_time')
-        waiting_time, vendor, seats, details = request.data.get(
-            'waiting_time'), request.data.get('vendor'), request.data.get('seats'), request.data.get('details')
+        source, destination, departure_date, departure_time = data.get('source'), data.get(
+            'destination'), data.get('departure_date'), data.get('departure_time')
+        waiting_time, vendor, seats, details = data.get(
+            'waiting_time'), data.get('vendor'), data.get('seats'), data.get('details')
 
         trip = Trip.objects.create(source=source, destination=destination, departure_date=departure_date,
                                    departure_time=departure_time, waiting_time=waiting_time, vendor=vendor, seats=seats, details=details, creator=user, status="Unconfirmed")
 
-        confirmed_passengers = request.data.get('passengers').split(',')
+        trip.users_confirmed.add(user.customuser)
+        confirmed_passengers = data.get('passengers').split(',')
         for passenger_email in confirmed_passengers:
             temp = User.objects.get(email=passenger_email)
             trip.users_confirmed.add(temp.customuser)
