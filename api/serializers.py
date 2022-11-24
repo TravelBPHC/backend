@@ -40,7 +40,7 @@ class RequestSerializer(serializers.ModelSerializer):
     receiver = serializers.SerializerMethodField()
 
     class Meta:
-        model = Trip
+        model = Request
         fields = ['post_link', 'source', 'destination', 'departure_date',
                   'departure_time', 'status', 'sender', 'receiver']
 
