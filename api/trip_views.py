@@ -7,11 +7,38 @@ from .serializers import TripSerializer
 from users.permissions import IsLoggedIn
 from .models import Trip
 from django.contrib.auth.models import User
+import datetime
 
 
 class AllPostsView(ListAPIView):
 
-    queryset = Trip.objects.filter(status="Upcoming")
+    def get_queryset(self):
+
+        queryset = Trip.objects.filter(status="Upcoming")
+        fields = ['src', 'dest', 'dt']
+
+        for field in fields:
+
+            globals()[field] = self.request.query_params.get(f'{field}')
+
+            if globals()[field]:
+
+                if field == 'src':
+                    queryset = queryset.filter(
+                        source__icontains=globals()[field])
+
+                elif field == 'dest':
+                    queryset = queryset.filter(
+                        destination__icontains=globals()[field])
+
+                elif field == 'dt':
+                    dt = globals()[field]
+                    date = datetime.datetime.strptime(dt, '%Y-%m-%d').date()
+
+                    queryset = queryset.filter(departure_date=date)
+
+        return queryset
+
     serializer_class = TripSerializer
 
 

@@ -13,13 +13,13 @@ class TripSerializer(serializers.ModelSerializer):
                   'departure_time', 'status', 'details', 'seats', 'waiting_time', 'creator', 'passengers']
 
     def get_creator(self, obj):
-        pn = obj.creator.customuser.phone
-        phone = pn.as_e164
+        # pn = obj.creator.customuser.phone
+        # phone = pn.as_e164
         return {
             "email": obj.creator.email,
             "name": obj.creator.first_name,
             "pfp": obj.creator.customuser.pfp,
-            "phone": str(phone)
+            # "phone": str(phone)
         }
 
     def get_passengers(self, obj):

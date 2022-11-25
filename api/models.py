@@ -22,6 +22,9 @@ class Trip(models.Model):
     def __str__(self):
         return f'Trip from {self.source} to {self.destination} on {self.departure_date}'
 
+    class Meta:
+        ordering = ['departure_date']
+
 
 class Request(models.Model):
 
