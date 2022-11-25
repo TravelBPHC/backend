@@ -16,7 +16,9 @@ class Trip(models.Model):
         max_length=50, null=False, blank=False, default="Upcoming", help_text='Upcoming or Past')
     details = models.TextField(null=True, blank=True)
     vendor = models.CharField(max_length=255, null=False, blank=False)
+    car_name = models.CharField(max_length=255, null=True, blank=True)
     seats = models.IntegerField(default=0)
+    price = models.IntegerField(default=None, blank=True, null=True)
     vacancies = models.IntegerField(default=0)
     waiting_time = models.CharField(max_length=50)
 
