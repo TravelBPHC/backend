@@ -13,10 +13,11 @@ class Trip(models.Model):
     creator = models.ForeignKey(
         User, on_delete=models.DO_NOTHING, related_name='created_trips')
     status = models.CharField(
-        max_length=50, null=False, blank=False, help_text='Upcoming or Past')
+        max_length=50, null=False, blank=False, default="Upcoming", help_text='Upcoming or Past')
     details = models.TextField(null=True, blank=True)
     vendor = models.CharField(max_length=255, null=False, blank=False)
     seats = models.IntegerField(default=0)
+    vacancies = models.IntegerField(default=0)
     waiting_time = models.CharField(max_length=50)
 
     def __str__(self):

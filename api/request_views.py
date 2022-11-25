@@ -104,7 +104,9 @@ class RequestAcceptView(APIView):
 
             req.status = "Accepted"
             requestor.customuser.upcoming_trips.add(trip)
+            trip.vacancies -= 1
 
+            trip.save()
             req.save()
             requestor.save()
 

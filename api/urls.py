@@ -15,6 +15,8 @@ urlpatterns = [
          trip_views.RemovePassengersView.as_view(), name='remove_passengers'),
     path('trip/all-active',
          trip_views.AllPostsView.as_view(), name='all_active'),
+    path('trip/done',
+         trip_views.TripDoneView.as_view(), name='trip_done'),
 
     # request URLs
     path('request/all-sent', request_views.SentRequestsView.as_view(),

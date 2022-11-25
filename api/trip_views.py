@@ -14,7 +14,7 @@ class AllPostsView(ListAPIView):
 
     def get_queryset(self):
 
-        queryset = Trip.objects.filter(status="Upcoming")
+        queryset = Trip.objects.filter(status="Upcoming").exclude(vacancies=0)
         fields = ['src', 'dest', 'dt']
 
         for field in fields:
@@ -79,13 +79,16 @@ class TripCreateView(CreateAPIView):
             'waiting_time'), data.get('vendor'), data.get('seats'), data.get('details')
 
         trip = Trip.objects.create(source=source, destination=destination, departure_date=departure_date,
-                                   departure_time=departure_time, waiting_time=waiting_time, vendor=vendor, seats=seats, details=details, creator=user, status="Unconfirmed")
+                                   departure_time=departure_time, waiting_time=waiting_time, vendor=vendor, seats=seats, vacancies=(int(seats) - 1), details=details, creator=user, status="Upcoming")
 
         trip.users_confirmed.add(user.customuser)
         confirmed_passengers = data.get('passengers').split(',')
         for passenger_email in confirmed_passengers:
+            if passenger_email == user.email:
+                continue
             temp = User.objects.get(email=passenger_email)
             trip.users_confirmed.add(temp.customuser)
+            trip.vacancies -= 1
 
         trip.save()
 
@@ -129,6 +132,7 @@ class RemovePassengersView(APIView):
                     continue
                 temp = User.objects.get(email=passenger_email)
                 trip.users_confirmed.remove(temp.customuser)
+                trip.vacancies += 1
 
             trip.save()
             return Response(data={"success": "specified passenger(s) removed"}, status=status.HTTP_200_OK)
@@ -143,3 +147,22 @@ class TripDetailView(RetrieveAPIView):
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
     lookup_field = 'id'
+
+
+class TripDoneView(APIView):
+
+    def post(self, request):
+
+        trip_id = request.data.get('trip_id', None)
+        trip = Trip.objects.get(id=trip_id)
+
+        trip.status = "Past"
+        trip.vacancies = 0
+        passengers = trip.users_confirmed.all()
+        for passenger in passengers:
+            passenger.upcoming_trips.remove(trip)
+            passenger.past_trips.add(trip)
+            passenger.save()
+        trip.save()
+
+        return Response(data={"success": f"Trip no. {trip_id} marked as a past trip"})
