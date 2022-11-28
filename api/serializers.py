@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Request, Trip
+from api.models import Request, Trip
 
 
 class TripSerializer(serializers.ModelSerializer):
@@ -51,7 +51,7 @@ class RequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Request
-        fields = ['post_link', 'source', 'destination', 'departure_date',
+        fields = ['id','post_link', 'source', 'destination', 'departure_date',
                   'departure_time', 'status', 'sender', 'receiver']
 
     def get_receiver(self, obj):
