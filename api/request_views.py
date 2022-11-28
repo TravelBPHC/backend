@@ -51,7 +51,7 @@ class RequestReceivedView(APIView):
         creator = User.objects.get(email=creator_email)
         trip = Trip.objects.get(id=trip_id)
         req = Request.objects.create(post_link=post_link, source=trip.source, destination=trip.destination,
-                                     departure_date=trip.departure_date, departure_time=trip.departure_time, status="Unconfirmed", sender=requestor, receiver=creator)
+                                     departure_date=trip.departure_date, departure_time=trip.departure_time, status="Unconfirmed", sender=requestor, receiver=creator, for_trip=trip)
         req.save()
 
         signer = Signer(salt=str(settings.SECRET_KEY))

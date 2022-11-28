@@ -6,11 +6,12 @@ class TripSerializer(serializers.ModelSerializer):
 
     creator = serializers.SerializerMethodField()
     passengers = serializers.SerializerMethodField()
+    requests = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
         fields = ['id', 'source', 'destination', 'departure_date',
-                  'departure_time', 'status', 'details', 'seats', 'vacancies', 'waiting_time', 'creator', 'passengers']
+                  'departure_time', 'status', 'details', 'seats', 'vacancies', 'waiting_time', 'creator', 'passengers', 'requests']
 
     def get_creator(self, obj):
         return {
@@ -32,6 +33,15 @@ class TripSerializer(serializers.ModelSerializer):
             "pfp": passenger.pfp,
             "phone": passenger.phone
         } for passenger in qs]
+
+    def get_requests(self, obj):
+        return [
+            {
+                "requestor_email": req.sender.email,
+                "status": req.status
+            }
+            for req in obj.requests.all()
+        ]
 
 
 class RequestSerializer(serializers.ModelSerializer):

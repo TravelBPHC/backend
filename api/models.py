@@ -42,6 +42,8 @@ class Request(models.Model):
         User, on_delete=models.DO_NOTHING, related_name='sent_requests', null=True)
     receiver = models.ForeignKey(
         User, on_delete=models.DO_NOTHING, related_name='received_requests', null=True)
+    for_trip = models.ForeignKey(
+        Trip, on_delete=models.CASCADE, related_name='requests', blank=True,  null=True)
 
     def __str__(self):
-        return f"Request for the post: {self.post_link}"
+        return f"Request for the post: {str(self.for_trip)}"
