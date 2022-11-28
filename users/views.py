@@ -1,10 +1,11 @@
+from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework import status
 from .utils import get_user
-from .serializers import CustomUserSerializer
+from .serializers import CustomUserSerializer, UserSerializer
 from google.auth.transport import requests
 from google.oauth2 import id_token
 from random import randint
@@ -93,3 +94,9 @@ class UserDetailView(APIView):
         user = get_user(request)
         serializer = CustomUserSerializer(user.customuser, many=False)
         return Response(serializer.data)
+
+
+class AllUsersView(ListAPIView):
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer

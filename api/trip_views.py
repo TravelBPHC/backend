@@ -1,4 +1,4 @@
-from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, DestroyAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -147,6 +147,20 @@ class TripDetailView(RetrieveAPIView):
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
     lookup_field = 'id'
+
+
+class DeleteTripView(DestroyAPIView):
+
+    permission_classes = [IsLoggedIn]
+
+    def delete(self, request, pk):
+        user = get_user(request)
+        trip = Trip.objects.get(pk=pk)
+        if trip.creator == user:
+            trip.delete()
+            return Response(data={"success": f"deleted trip with id = {pk}"}, status=status.HTTP_200_OK)
+        else:
+            return Response(data={"error": "only the creator of a trip can delete it"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class TripDoneView(APIView):
