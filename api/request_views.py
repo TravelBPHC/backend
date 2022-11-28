@@ -57,7 +57,7 @@ class RequestReceivedView(APIView):
         signer = Signer(salt=str(settings.SECRET_KEY))
         signed_email = signer.sign_object({"email": requestor.email})
         html_body = get_template('request_received.html')
-        action_link = f"http://127.0.0.1:3000/request-approval?id={signed_email}&pid={trip_id}&rid={req.id}&plink={post_link}"
+        action_link = f"http://localhost:3000/request-approval?id={signed_email}&pid={trip_id}&rid={req.id}&plink={post_link}"
 
         context = {
             "receiver": creator,
@@ -84,7 +84,7 @@ class RequestReceivedView(APIView):
         return Response(data={"Message": f"Request created and mail sent to {creator.email}"})
 
 
-class RequestAcceptView(APIView):
+class AcceptFromMail(APIView):
 
     def get(self, request):
 
@@ -95,50 +95,57 @@ class RequestAcceptView(APIView):
         post_link = request.GET.get('plink', None)
         unsigned = signer.unsign_object(signed)
         email = unsigned['email']
+        req = Request.objects.get(id=req_id)
 
-        if signed is not None and trip_id is not None and req_id is not None and post_link is not None:
-            requestor = User.objects.get(email=email)
-            trip = Trip.objects.get(id=int(trip_id))
-            req = Request.objects.get(id=req_id)
-            creator = trip.creator
+        if req.receiver is not None:
 
-            req.status = "Accepted"
-            requestor.customuser.upcoming_trips.add(trip)
-            trip.vacancies -= 1
+            if signed is not None and trip_id is not None and req_id is not None and post_link is not None:
+                requestor = User.objects.get(email=email)
+                trip = Trip.objects.get(id=int(trip_id))
+                req = Request.objects.get(id=req_id)
+                creator = trip.creator
 
-            trip.save()
-            req.save()
-            requestor.save()
+                req.status = "Accepted"
+                req.receiver = None
+                requestor.customuser.upcoming_trips.add(trip)
+                trip.vacancies -= 1
 
-            html_body = get_template('request_accepted.html')
+                trip.save()
+                req.save()
+                requestor.save()
 
-            context = {
-                "receiver": requestor,
-                "sender": creator,
-                "post_link": str(post_link),
-                "source": str(trip.source),
-                "destination": str(trip.destination),
-                "departure_date": str(trip.departure_date),
-                "departure_time": str(trip.departure_time)
-            }
+                html_body = get_template('request_accepted.html')
 
-            body = html_body.render(context)
-            message = EmailMultiAlternatives(
-                subject=f'Request accepted',
-                body=f'Hey {requestor.first_name}, {creator.first_name} has accepted your request to travel along with you on this trip: {post_link}\n',
-                to=[requestor.email],
-                from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
-            )
+                context = {
+                    "receiver": requestor,
+                    "sender": creator,
+                    "post_link": str(post_link),
+                    "source": str(trip.source),
+                    "destination": str(trip.destination),
+                    "departure_date": str(trip.departure_date),
+                    "departure_time": str(trip.departure_time)
+                }
 
-            message.attach_alternative(body, "text/html")
-            connection = mail.get_connection()
-            connection.send_messages([message])
+                body = html_body.render(context)
+                message = EmailMultiAlternatives(
+                    subject=f'Request accepted',
+                    body=f'Hey {requestor.first_name}, {creator.first_name} has accepted your request to travel along with you on this trip: {post_link}\n',
+                    to=[requestor.email],
+                    from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
+                )
 
-            return Response(data={"success": f"Request accepted"}, status=status.HTTP_200_OK)
-        return Response(data={"error": "Something went wrong"}, status=status.HTTP_400_BAD_REQUEST)
+                message.attach_alternative(body, "text/html")
+                connection = mail.get_connection()
+                connection.send_messages([message])
+
+                return Response(data={"success": f"Request accepted"}, status=status.HTTP_200_OK)
+            return Response(data={"error": "Something went wrong"}, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response(data={"error": "already responded to this request"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class RequestRejectView(APIView):
+class RejectFromMail(APIView):
 
     def get(self, request):
 
@@ -149,39 +156,157 @@ class RequestRejectView(APIView):
         post_link = request.GET.get('plink', None)
         unsigned = signer.unsign_object(signed)
         email = unsigned['email']
+        req = Request.objects.get(id=req_id)
 
-        if signed is not None and trip_id is not None and req_id is not None and post_link is not None:
-            requestor = User.objects.get(email=email)
-            trip = Trip.objects.get(id=int(trip_id))
-            req = Request.objects.get(id=int(req_id))
-            creator = trip.creator
+        if req.receiver is not None:
 
-            req.status = "Rejected"
-            req.save()
+            if signed is not None and trip_id is not None and req_id is not None and post_link is not None:
+                requestor = User.objects.get(email=email)
+                trip = Trip.objects.get(id=int(trip_id))
+                req = Request.objects.get(id=int(req_id))
+                creator = trip.creator
 
-            html_body = get_template('request_rejected.html')
+                req.status = "Rejected"
+                req.receiver = None
+                req.save()
 
-            context = {
-                "receiver": requestor,
-                "sender": creator,
-                "post_link": str(post_link),
-                "source": str(trip.source),
-                "destination": str(trip.destination),
-                "departure_date": str(trip.departure_date),
-                "departure_time": str(trip.departure_time)
-            }
+                html_body = get_template('request_rejected.html')
 
-            body = html_body.render(context)
-            message = EmailMultiAlternatives(
-                subject=f'Request rejected',
-                body=f'Hey {requestor.first_name}, {creator.first_name} has rejected your request to travel along with you on this trip: {post_link}\n',
-                to=[requestor.email],
-                from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
-            )
+                context = {
+                    "receiver": requestor,
+                    "sender": creator,
+                    "post_link": str(post_link),
+                    "source": str(trip.source),
+                    "destination": str(trip.destination),
+                    "departure_date": str(trip.departure_date),
+                    "departure_time": str(trip.departure_time)
+                }
 
-            message.attach_alternative(body, "text/html")
-            connection = mail.get_connection()
-            connection.send_messages([message])
+                body = html_body.render(context)
+                message = EmailMultiAlternatives(
+                    subject=f'Request rejected',
+                    body=f'Hey {requestor.first_name}, {creator.first_name} has rejected your request to travel along with you on this trip: {post_link}\n',
+                    to=[requestor.email],
+                    from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
+                )
 
-            return Response(data={"success": f"Request rejected"}, status=status.HTTP_200_OK)
-        return Response(data={"error": "Something went wrong"}, status=status.HTTP_400_BAD_REQUEST)
+                message.attach_alternative(body, "text/html")
+                connection = mail.get_connection()
+                connection.send_messages([message])
+
+                return Response(data={"success": f"Request rejected"}, status=status.HTTP_200_OK)
+            return Response(data={"error": "Something went wrong"}, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response(data={"error": "already responded to this request"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RejectRequestView(APIView):
+
+    def get(self, request):
+
+        email = request.GET.get('id', None)
+        trip_id = request.GET.get('pid', None)
+        req_id = request.GET.get('rid', None)
+        post_link = request.GET.get('plink', None)
+        req = Request.objects.get(id=req_id)
+
+        if req.receiver is not None:
+
+            if email is not None and trip_id is not None and req_id is not None and post_link is not None:
+                requestor = User.objects.get(email=email)
+                trip = Trip.objects.get(id=int(trip_id))
+                req = Request.objects.get(id=int(req_id))
+                creator = trip.creator
+
+                req.status = "Rejected"
+                req.receiver = None
+                req.save()
+
+                html_body = get_template('request_rejected.html')
+
+                context = {
+                    "receiver": requestor,
+                    "sender": creator,
+                    "post_link": str(post_link),
+                    "source": str(trip.source),
+                    "destination": str(trip.destination),
+                    "departure_date": str(trip.departure_date),
+                    "departure_time": str(trip.departure_time)
+                }
+
+                body = html_body.render(context)
+                message = EmailMultiAlternatives(
+                    subject=f'Request rejected',
+                    body=f'Hey {requestor.first_name}, {creator.first_name} has rejected your request to travel along with you on this trip: {post_link}\n',
+                    to=[requestor.email],
+                    from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
+                )
+
+                message.attach_alternative(body, "text/html")
+                connection = mail.get_connection()
+                connection.send_messages([message])
+
+                return Response(data={"success": f"Request rejected"}, status=status.HTTP_200_OK)
+            return Response(data={"error": "Something went wrong"}, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response(data={"error": "already responded to this request"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AcceptRequestView(APIView):
+
+    def get(self, request):
+
+        email = request.GET.get('id', None)
+        trip_id = request.GET.get('pid', None)
+        req_id = request.GET.get('rid', None)
+        post_link = request.GET.get('plink', None)
+        req = Request.objects.get(id=req_id)
+
+        if req.receiver is not None:
+
+            if email is not None and trip_id is not None and req_id is not None and post_link is not None:
+                requestor = User.objects.get(email=email)
+                trip = Trip.objects.get(id=int(trip_id))
+                req = Request.objects.get(id=req_id)
+                creator = trip.creator
+
+                req.status = "Accepted"
+                req.receiver = None
+                requestor.customuser.upcoming_trips.add(trip)
+                trip.vacancies -= 1
+
+                trip.save()
+                req.save()
+                requestor.save()
+
+                html_body = get_template('request_accepted.html')
+
+                context = {
+                    "receiver": requestor,
+                    "sender": creator,
+                    "post_link": str(post_link),
+                    "source": str(trip.source),
+                    "destination": str(trip.destination),
+                    "departure_date": str(trip.departure_date),
+                    "departure_time": str(trip.departure_time)
+                }
+
+                body = html_body.render(context)
+                message = EmailMultiAlternatives(
+                    subject=f'Request accepted',
+                    body=f'Hey {requestor.first_name}, {creator.first_name} has accepted your request to travel along with you on this trip: {post_link}\n',
+                    to=[requestor.email],
+                    from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
+                )
+
+                message.attach_alternative(body, "text/html")
+                connection = mail.get_connection()
+                connection.send_messages([message])
+
+                return Response(data={"success": f"Request accepted"}, status=status.HTTP_200_OK)
+            return Response(data={"error": "Something went wrong"}, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response(data={"error": "already responded to this request"}, status=status.HTTP_400_BAD_REQUEST)

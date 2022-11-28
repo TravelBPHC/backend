@@ -50,7 +50,7 @@ class RequestSerializer(serializers.ModelSerializer):
             "name": obj.receiver.first_name,
             "pfp": obj.receiver.customuser.pfp,
             "phone": obj.receiver.customuser.phone
-        }
+        } if obj.receiver else None
 
     def get_sender(self, obj):
         return {

@@ -39,9 +39,9 @@ class Request(models.Model):
     status = models.CharField(
         max_length=50, null=False, blank=False, help_text='Unconfirmed, Accepted or Rejected')
     sender = models.ForeignKey(
-        User, on_delete=models.DO_NOTHING, related_name='sent_requests')
+        User, on_delete=models.DO_NOTHING, related_name='sent_requests', null=True)
     receiver = models.ForeignKey(
-        User, on_delete=models.DO_NOTHING, related_name='received_requests')
+        User, on_delete=models.DO_NOTHING, related_name='received_requests', null=True)
 
     def __str__(self):
         return f"Request for the post: {self.post_link}"
