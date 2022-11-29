@@ -1,1 +1,1 @@
-web: python manage.py migrate && gunicorn travelbphc.wsgi
+web: gunicorn backend.wsgi --log-file -
