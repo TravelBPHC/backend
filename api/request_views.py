@@ -12,6 +12,7 @@ from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 from django.core import mail
 from django.core.signing import Signer
+from decouple import config
 
 
 class SentRequestsView(ListAPIView):
@@ -57,7 +58,8 @@ class RequestReceivedView(APIView):
         signer = Signer(salt=str(settings.SECRET_KEY))
         signed_email = signer.sign_object({"email": requestor.email})
         html_body = get_template('request_received.html')
-        action_link = f"http://localhost:3000/request-approval?id={signed_email}&pid={trip_id}&rid={req.id}&plink={post_link}"
+        frontend_link = config("FRONTEND_LINK")
+        action_link = f"{frontend_link}/request-approval?id={signed_email}&pid={trip_id}&rid={req.id}&plink={post_link}"
 
         context = {
             "receiver": creator,
