@@ -1,1 +1,1 @@
-gunicorn --worker-tmp-dir /dev/shm travelbphc.wsgi
+web: gunicorn travelbphc.wsgi --log-file -
