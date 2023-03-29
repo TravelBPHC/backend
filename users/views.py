@@ -4,13 +4,16 @@ from rest_framework.response import Response
 from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework import status
+from decouple import config
 from .utils import get_user
 from .serializers import CustomUserSerializer, UserSerializer
-from google.auth.transport import requests
+from google.auth.transport import requests as google_requests
+import requests
 from google.oauth2 import id_token
 from random import randint
 from .permissions import IsLoggedIn
 from decouple import config
+import google.auth.transport.requests
 import jwt
 
 
@@ -18,12 +21,23 @@ class AuthenticateView(APIView):
 
     def post(self, request):
 
-        token = request.data.get('credential', None)
+        code = request.data.get('code', None)
 
-        if token is not None:
+        if code is not None:
+
+            data = {
+                'code': code,
+                'client_id': config('CLIENT_ID'),
+                'client_secret': config('CLIENT_SECRET'),
+                'redirect_uri': 'postmessage',
+                'grant_type': 'authorization_code'
+            }
+            res = requests.post(
+                'https://oauth2.googleapis.com/token', data=data)
+            token = res.json()['id_token']
 
             info = id_token.verify_oauth2_token(
-                token, requests.Request(), config('CLIENT_ID'))
+                token, google_requests.Request(), config('CLIENT_ID'))
 
             email, first_name, pfp, last_name = info['email'], info.get(
                 'given_name', None), info['picture'], info.get("family_name", "")
