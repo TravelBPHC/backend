@@ -23,7 +23,7 @@ class AuthenticateView(APIView):
 
         code = request.data.get('code', None)
 
-        if code is not None:
+        try:
 
             data = {
                 'code': code,
@@ -34,7 +34,8 @@ class AuthenticateView(APIView):
             }
             res = requests.post(
                 'https://oauth2.googleapis.com/token', data=data)
-            token = res.json()['id_token']
+            token, access_token, refresh_token, expires_in = res.json()['id_token'], res.json()['access_token'], res.json()[
+                'refresh_token'], res.json()['expires_in']
 
             info = id_token.verify_oauth2_token(
                 token, google_requests.Request(), config('CLIENT_ID'))
@@ -60,7 +61,10 @@ class AuthenticateView(APIView):
                 request.session['token'] = str(token)
                 response.data = {
                     "created": f"User with the email ID {email} created",
-                    "token": str(token)
+                    "token": str(token),
+                    "g_access_token": str(access_token),
+                    "g_refresh_token": str(refresh_token),
+                    "expires_in": str(expires_in)
                 }
                 response.status = status.HTTP_201_CREATED
 
@@ -73,13 +77,16 @@ class AuthenticateView(APIView):
                 request.session['token'] = str(token)
                 response.data = {
                     "success": f"User with email ID {email} logged in successfully",
-                    "token": str(token)
+                    "token": str(token),
+                    "g_access_token": str(access_token),
+                    "g_refresh_token": str(refresh_token),
+                    "expires_in": str(expires_in)
                 }
                 response.status = status.HTTP_200_OK
                 return response
 
-        else:
-            return Response(data={"error": "auth token not found"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(data={"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PhoneView(APIView):
