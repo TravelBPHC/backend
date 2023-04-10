@@ -15,5 +15,5 @@ urlpatterns = [
     path('reject', request_views.RejectRequestView.as_view(),
          name='reject_request'),
     path('accept', request_views.AcceptRequestView.as_view(),
-         name='accpet_request')
+         name='accpet_request'),
 ]
