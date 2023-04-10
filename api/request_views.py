@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.shortcuts import render
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -13,6 +14,10 @@ from django.core.mail import EmailMultiAlternatives
 from django.core import mail
 from django.core.signing import Signer
 from decouple import config
+
+
+def test_view(request):
+    return render(request, 'D:\Shivansh\CS\Web Dev\\travel-bphc\\travelbphc\\api\\templates\\notifs.html')
 
 
 class SentRequestsView(ListAPIView):

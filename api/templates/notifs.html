@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<style type="text/css">
+	.marked{
+		display: none;
+	}
+</style>
+    <!-- Main Start -->
+    <main>
+        <textarea id="chat-log" cols="150" rows="30"></textarea><br>
+    </main>
+    <!-- End -->
+
+<script type="text/javascript">
+
+    var webSocket = new WebSocket('ws://localhost:8000/ws/notifications/');
+
+    webSocket.onopen = function(e){
+        console.log('here')
+        webSocket.send(JSON.stringify({
+            'message': 'Hello, World!'
+        }));
+        console.log("Connection established");
+    }
+
+    webSocket.onmessage = function(e){
+        console.log("Message received");
+        const data = JSON.parse(e.data);
+        if (data.message.id != undefined){
+            document.querySelector('#chat-log').value += ('Trip ID: ' + data.message.id + '\n' +
+            'Source: ' + data.message.source + '\n' +
+            'Destination: ' + data.message.destination + '\n' +
+            'Departure Date: ' + data.message.departure_date + '\n' +
+            'Departure Time: ' + data.message.departure_time + '\n' +
+            'Status: ' + data.message.status + '\n' +
+            'Creator Email: ' + data.message.creator + '\n' +
+            'Waiting Time: ' + data.message.waiting_time + '\n' +
+            'Vacancies: ' + data.message.vacancies + '\n' +
+            '---------------------------------------------------' + '\n'
+            );
+        }
+    }
+
+    webSocket.onclose = function(e){
+        console.error('Chat socket closed unexpectedly');
+    }
+    
+</script>
+
+{% endblock %}
