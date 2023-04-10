@@ -17,7 +17,7 @@ from decouple import config
 
 
 def test_view(request):
-    return render(request, 'D:\Shivansh\CS\Web Dev\\travel-bphc\\travelbphc\\api\\templates\\notifs.html')
+    return render(request, 'notifs.html')
 
 
 class SentRequestsView(ListAPIView):
