@@ -1,4 +1,5 @@
 import json
+from datetime import datetime as dt
 from django.db import models
 from django.conf import settings
 from asgiref.sync import async_to_sync
@@ -33,10 +34,25 @@ class Trip(models.Model):
         Send a message via a websocket to the client whenever a Trip object has
         been modified
         '''
+
+        reqs = [
+            {
+                "requestor_email": req.sender.email,
+                "status": req.status
+            }
+            for req in self.requests.all()
+        ]
+
+        self.departure_date = dt.strptime(
+            str(self.departure_date), '%Y-%m-%d').date()
+        self.departure_time = dt.strptime(
+            str(self.departure_time), '%H:%M:%S').time()
+
         if (self._state.adding == True):
             super(Trip, self).save(*args, **kwargs)
-            print(f'true for {self.id}')
+
             channel_layer = get_channel_layer()
+
             message = {
                 "id": self.id,
                 "source": self.source,
@@ -52,6 +68,8 @@ class Trip(models.Model):
                 "price": self.price,
                 "vacancies": self.vacancies,
                 "waiting_time": self.waiting_time,
+                "requests": reqs,
+                "updated": False
             }
             async_to_sync(channel_layer.group_send)(
                 'base_group', {
@@ -61,6 +79,33 @@ class Trip(models.Model):
             )
         else:
             super(Trip, self).save(*args, **kwargs)
+
+            channel_layer = get_channel_layer()
+
+            message = {
+                "id": self.id,
+                "source": self.source,
+                "destination": self.destination,
+                "departure_date": self.departure_date.isoformat(),
+                "departure_time": self.departure_time.isoformat(),
+                "creator": self.creator.email,
+                "status": self.status,
+                "details": self.details,
+                "vendor": self.vendor,
+                "car_name": self.car_name,
+                "seats": self.seats,
+                "price": self.price,
+                "vacancies": self.vacancies,
+                "waiting_time": self.waiting_time,
+                "requests": reqs,
+                "updated": True
+            }
+            async_to_sync(channel_layer.group_send)(
+                'base_group', {
+                    'type': 'trip_created',
+                    'value': json.dumps({'message': message})
+                }
+            )
 
     class Meta:
         ordering = ['departure_date']
