@@ -101,7 +101,7 @@ class Request(models.Model):
             "departure_time": self.departure_time.isoformat(),
             "status": self.status,
             "sender": self.sender.email,
-            "receiver": self.receiver.email
+            "receiver": self.receiver.email if self.receiver else None,
         }
         async_to_sync(channel_layer.group_send)(
             'base_group', {
