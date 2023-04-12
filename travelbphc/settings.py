@@ -90,23 +90,37 @@ ASGI_APPLICATION = 'travelbphc.asgi.application'
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [(config('REDIS_HOST'))],
-        },
-    },
-}
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': config('SUPABASE_NAME'),
-        'USER': config('SUPABASE_USER'),
-        'PASSWORD': config('SUPABASE_PASSWORD'),
-        'HOST': config('SUPABASE_HOST'),
-        'PORT': config('SUPABASE_PORT')
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
     }
 }
+
+# SQLite
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels_redis.core.RedisChannelLayer",
+#         "CONFIG": {
+#             "hosts": [(config('REDIS_HOST'))],
+#         },
+#     },
+# }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': config('SUPABASE_NAME'),
+#         'USER': config('SUPABASE_USER'),
+#         'PASSWORD': config('SUPABASE_PASSWORD'),
+#         'HOST': config('SUPABASE_HOST'),
+#         'PORT': config('SUPABASE_PORT')
+#     }
+# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {

@@ -13,6 +13,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.core import mail
 from django.core.signing import Signer
 from decouple import config
+from pywebpush import webpush, WebPushException
 
 
 class SentRequestsView(ListAPIView):
@@ -82,6 +83,26 @@ class RequestReceivedView(APIView):
 
         message.attach_alternative(body, "text/html")
         connection = mail.get_connection()
+
+        if creator.get_notifs:
+            try:
+                webpush(
+                    subscription_info={
+                        "endpoint": creator.endpoint,
+                        "keys": {
+                            "p256dh": creator.p256dh_key,
+                            "auth": creator.auth_key
+                        }},
+                    data=context,
+                    vapid_private_key=config("VAPID_PRIVATE_KEY"),
+                    vapid_claims={
+                        "sub": "bphctravel@gmail.com",
+                    }
+                )
+            except WebPushException as e:
+                print(
+                    f"something went wrong while sending the notification, exception message: {e}")
+
         connection.send_messages([message])
         return Response(data={"Message": f"Request created and mail sent to {creator.email}"})
 
@@ -135,6 +156,25 @@ class AcceptFromMail(APIView):
                     to=[requestor.email],
                     from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
                 )
+
+                if requestor.get_notifs:
+                    try:
+                        webpush(
+                            subscription_info={
+                                "endpoint": requestor.endpoint,
+                                "keys": {
+                                    "p256dh": requestor.p256dh_key,
+                                    "auth": requestor.auth_key
+                                }},
+                            data=context,
+                            vapid_private_key=config("VAPID_PRIVATE_KEY"),
+                            vapid_claims={
+                                "sub": "bphctravel@gmail.com",
+                            }
+                        )
+                    except WebPushException as e:
+                        print(
+                            f"something went wrong while sending the notification, exception message: {e}")
 
                 message.attach_alternative(body, "text/html")
                 connection = mail.get_connection()
@@ -192,6 +232,25 @@ class RejectFromMail(APIView):
                     from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
                 )
 
+                if requestor.get_notifs:
+                    try:
+                        webpush(
+                            subscription_info={
+                                "endpoint": requestor.endpoint,
+                                "keys": {
+                                    "p256dh": requestor.p256dh_key,
+                                    "auth": requestor.auth_key
+                                }},
+                            data=context,
+                            vapid_private_key=config("VAPID_PRIVATE_KEY"),
+                            vapid_claims={
+                                "sub": "bphctravel@gmail.com",
+                            }
+                        )
+                    except WebPushException as e:
+                        print(
+                            f"something went wrong while sending the notification, exception message: {e}")
+
                 message.attach_alternative(body, "text/html")
                 connection = mail.get_connection()
                 connection.send_messages([message])
@@ -244,6 +303,25 @@ class RejectRequestView(APIView):
                     to=[requestor.email],
                     from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
                 )
+
+                if requestor.get_notifs:
+                    try:
+                        webpush(
+                            subscription_info={
+                                "endpoint": requestor.endpoint,
+                                "keys": {
+                                    "p256dh": requestor.p256dh_key,
+                                    "auth": requestor.auth_key
+                                }},
+                            data=context,
+                            vapid_private_key=config("VAPID_PRIVATE_KEY"),
+                            vapid_claims={
+                                "sub": "bphctravel@gmail.com",
+                            }
+                        )
+                    except WebPushException as e:
+                        print(
+                            f"something went wrong while sending the notification, exception message: {e}")
 
                 message.attach_alternative(body, "text/html")
                 connection = mail.get_connection()
@@ -302,6 +380,25 @@ class AcceptRequestView(APIView):
                     to=[requestor.email],
                     from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
                 )
+
+                if requestor.get_notifs:
+                    try:
+                        webpush(
+                            subscription_info={
+                                "endpoint": requestor.endpoint,
+                                "keys": {
+                                    "p256dh": requestor.p256dh_key,
+                                    "auth": requestor.auth_key
+                                }},
+                            data=context,
+                            vapid_private_key=config("VAPID_PRIVATE_KEY"),
+                            vapid_claims={
+                                "sub": "bphctravel@gmail.com",
+                            }
+                        )
+                    except WebPushException as e:
+                        print(
+                            f"something went wrong while sending the notification, exception message: {e}")
 
                 message.attach_alternative(body, "text/html")
                 connection = mail.get_connection()
