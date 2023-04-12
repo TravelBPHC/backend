@@ -82,15 +82,15 @@ class RequestReceivedView(APIView):
         }
 
         # sending push notification
-        creator = creator.customuser
-        if creator.get_notifs:
+        notification_receiver = creator.customuser
+        if notification_receiver.get_notifs:
             try:
                 webpush(
                     subscription_info={
-                        "endpoint": creator.endpoint,
+                        "endpoint": notification_receiver.endpoint,
                         "keys": {
-                            "p256dh": creator.p256dh_key,
-                            "auth": creator.auth_key
+                            "p256dh": notification_receiver.p256dh_key,
+                            "auth": notification_receiver.auth_key
                         }},
                     data=json.dumps(notification_context),
                     vapid_private_key=config("VAPID_PRIVATE_KEY"),
@@ -171,15 +171,15 @@ class AcceptFromMail(APIView):
                 }
 
                 # sending push notification
-                requestor = requestor.customuser
-                if requestor.get_notifs:
+                notification_receiver = requestor.customuser
+                if notification_receiver.get_notifs:
                     try:
                         webpush(
                             subscription_info={
-                                "endpoint": requestor.endpoint,
+                                "endpoint": notification_receiver.endpoint,
                                 "keys": {
-                                    "p256dh": requestor.p256dh_key,
-                                    "auth": requestor.auth_key
+                                    "p256dh": notification_receiver.p256dh_key,
+                                    "auth": notification_receiver.auth_key
                                 }},
                             data=json.dumps(notification_context),
                             vapid_private_key=config("VAPID_PRIVATE_KEY"),
@@ -266,15 +266,15 @@ class RejectFromMail(APIView):
                 }
 
                 # sending push notification
-                requestor = requestor.customuser
-                if requestor.get_notifs:
+                notification_receiver = requestor.customuser
+                if notification_receiver.get_notifs:
                     try:
                         webpush(
                             subscription_info={
-                                "endpoint": requestor.endpoint,
+                                "endpoint": notification_receiver.endpoint,
                                 "keys": {
-                                    "p256dh": requestor.p256dh_key,
-                                    "auth": requestor.auth_key
+                                    "p256dh": notification_receiver.p256dh_key,
+                                    "auth": notification_receiver.auth_key
                                 }},
                             data=json.dumps(notification_context),
                             vapid_private_key=config("VAPID_PRIVATE_KEY"),
@@ -314,6 +314,9 @@ class RejectRequestView(APIView):
 
             if email is not None and trip_id is not None and req_id is not None and post_link is not None:
                 requestor = User.objects.get(email=email)
+                print(trip_id, type(trip_id))
+                while trip_id == '':
+                    pass
                 trip = Trip.objects.get(id=int(trip_id))
                 req = Request.objects.get(id=int(req_id))
                 creator = trip.creator
@@ -350,15 +353,16 @@ class RejectRequestView(APIView):
                 }
 
                 # sending push notification
-                requestor = requestor.customuser
-                if requestor.get_notifs:
+                notification_receiver = requestor.customuser
+                if notification_receiver.get_notifs:
+                    print('got here')
                     try:
                         webpush(
                             subscription_info={
-                                "endpoint": requestor.endpoint,
+                                "endpoint": notification_receiver.endpoint,
                                 "keys": {
-                                    "p256dh": requestor.p256dh_key,
-                                    "auth": requestor.auth_key
+                                    "p256dh": notification_receiver.p256dh_key,
+                                    "auth": notification_receiver.auth_key
                                 }},
                             data=json.dumps(notification_context),
                             vapid_private_key=config("VAPID_PRIVATE_KEY"),
@@ -398,6 +402,8 @@ class AcceptRequestView(APIView):
 
             if email is not None and trip_id is not None and req_id is not None and post_link is not None:
                 requestor = User.objects.get(email=email)
+                while trip_id == '':
+                    pass
                 trip = Trip.objects.get(id=int(trip_id))
                 req = Request.objects.get(id=req_id)
                 creator = trip.creator
@@ -439,15 +445,15 @@ class AcceptRequestView(APIView):
                 }
 
                 # sending push notification
-                requestor = requestor.customuser
-                if requestor.get_notifs:
+                notification_receiver = requestor.customuser
+                if notification_receiver.get_notifs:
                     try:
                         webpush(
                             subscription_info={
-                                "endpoint": requestor.endpoint,
+                                "endpoint": notification_receiver.endpoint,
                                 "keys": {
-                                    "p256dh": requestor.p256dh_key,
-                                    "auth": requestor.auth_key
+                                    "p256dh": notification_receiver.p256dh_key,
+                                    "auth": notification_receiver.auth_key
                                 }},
                             data=json.dumps(notification_context),
                             vapid_private_key=config("VAPID_PRIVATE_KEY"),

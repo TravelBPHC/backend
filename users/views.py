@@ -38,7 +38,7 @@ class AuthenticateView(APIView):
                 'refresh_token'], res.json()['expires_in']
 
             info = id_token.verify_oauth2_token(
-                token, google_requests.Request(), config('CLIENT_ID'))
+                token, google_requests.Request(), config('CLIENT_ID'), clock_skew_in_seconds=1)
 
             email, first_name, pfp, last_name = info['email'], info.get(
                 'given_name', None), info['picture'], info.get("family_name", "")
@@ -130,13 +130,18 @@ class AddSubscription(APIView):
     def post(self, request):
         try:
             payload = request.data
+            print(type(payload))
+            print(payload['keys'].get(
+                'p256dh'))
+            print(payload['keys'].get('auth'))
             p256dh_key, auth_key, endpoint = payload['keys'].get(
                 'p256dh'), payload['keys'].get('auth'), payload.get('endpoint', None)
+            print(payload.get('endpoint', None))
             base_user = get_user(request)
             user = base_user.customuser
             user.p256dh_key, user.auth_key, user.endpoint, user.get_notifs = p256dh_key, auth_key, endpoint, True
             user.save()
-            return Response({"success": f"registered the user with the email ID: {user.email} to the mailing list"}, status=200)
+            return Response({"success": f"registered the user with the email ID: {user.user.email} to the mailing list"}, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
