@@ -16,9 +16,9 @@ class CustomUser(models.Model):
     past_trips = models.ManyToManyField(
         Trip, blank=True, related_name='passengers')
     get_notifs = models.BooleanField(default=False)
-    p256dh_key = models.CharField(max_length=255, blank=True, null=True)
-    auth_key = models.CharField(max_length=255, blank=True, null=True)
-    endpoint = models.CharField(max_length=255, blank=True, null=True)
+    p256dh_key = models.TextField()
+    auth_key = models.TextField()
+    endpoint = models.TextField()
 
     def __str__(self):
         return str(f"{self.user.first_name.capitalize()} - {self.user.email}")
