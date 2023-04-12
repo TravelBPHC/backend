@@ -21,7 +21,6 @@ class NotificationConsumer(WebsocketConsumer):
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
-        print('Message from client: ' + message)
 
     def request_created_or_modified(self, event):
         self.send(text_data=event.get('value'))

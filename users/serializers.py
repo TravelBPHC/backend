@@ -10,7 +10,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['name', 'email', 'pfp', 'phone']
+        fields = ['name', 'email', 'pfp', 'phone', 'get_notifs']
 
     def get_name(self, obj):
         return obj.user.first_name

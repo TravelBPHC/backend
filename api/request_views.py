@@ -1,3 +1,4 @@
+import json
 from django.conf import settings
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
@@ -62,7 +63,7 @@ class RequestReceivedView(APIView):
         frontend_link = config("FRONTEND_LINK")
         action_link = f"{frontend_link}/request-approval?id={signed_email}&pid={trip_id}&rid={req.id}&plink={post_link}"
 
-        context = {
+        email_context = {
             "receiver": creator,
             "sender": requestor,
             "post_link": str(post_link),
@@ -73,17 +74,15 @@ class RequestReceivedView(APIView):
             "action_link": str(action_link)
         }
 
-        body = html_body.render(context)
-        message = EmailMultiAlternatives(
-            subject=f'Travel@BPHC - New request by {requestor.first_name}',
-            body=f'Hey {creator.first_name}, {requestor.first_name} has requested to travel along with you on this trip: {post_link}\n\nTo accept or reject, click on this link: {action_link}',
-            to=[creator.email],
-            from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
-        )
+        notification_context = {
+            "type": "new request",
+            "sender": requestor.first_name,
+            "departure_date": str(trip.departure_date),
+            "destination": str(trip.destination)
+        }
 
-        message.attach_alternative(body, "text/html")
-        connection = mail.get_connection()
-
+        # sending push notification
+        creator = creator.customuser
         if creator.get_notifs:
             try:
                 webpush(
@@ -93,18 +92,33 @@ class RequestReceivedView(APIView):
                             "p256dh": creator.p256dh_key,
                             "auth": creator.auth_key
                         }},
-                    data=context,
+                    data=json.dumps(notification_context),
                     vapid_private_key=config("VAPID_PRIVATE_KEY"),
                     vapid_claims={
-                        "sub": "bphctravel@gmail.com",
-                    }
+                        "sub": "mailto:bphctravel@gmail.com",
+                    },
+                    ttl=12 * 60 * 60,
+                    verbose=True
                 )
+                print("Notification sent successfully")
             except WebPushException as e:
                 print(
                     f"something went wrong while sending the notification, exception message: {e}")
 
+        # sending email
+        body = html_body.render(email_context)
+        message = EmailMultiAlternatives(
+            subject=f'Travel@BPHC - New request by {requestor.first_name}',
+            body=f'Hey {creator.first_name}, {requestor.first_name} has requested to travel along with you on this trip: {post_link}\n\nTo accept or reject, click on this link: {action_link}',
+            to=[creator.email],
+            from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
+        )
+
+        message.attach_alternative(body, "text/html")
+        connection = mail.get_connection()
         connection.send_messages([message])
-        return Response(data={"Message": f"Request created and mail sent to {creator.email}"})
+
+        return Response(data={"Message": f"Request created, mail and notification sent to {creator.email}"})
 
 
 class AcceptFromMail(APIView):
@@ -149,14 +163,15 @@ class AcceptFromMail(APIView):
                     "departure_time": str(trip.departure_time)
                 }
 
-                body = html_body.render(context)
-                message = EmailMultiAlternatives(
-                    subject=f'Request accepted',
-                    body=f'Hey {requestor.first_name}, {creator.first_name} has accepted your request to travel along with you on this trip: {post_link}\n',
-                    to=[requestor.email],
-                    from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
-                )
+                notification_context = {
+                    "type": "request accepted",
+                    "sender": creator.first_name,
+                    "departure_date": str(trip.departure_date),
+                    "destination": str(trip.destination)
+                }
 
+                # sending push notification
+                requestor = requestor.customuser
                 if requestor.get_notifs:
                     try:
                         webpush(
@@ -166,15 +181,26 @@ class AcceptFromMail(APIView):
                                     "p256dh": requestor.p256dh_key,
                                     "auth": requestor.auth_key
                                 }},
-                            data=context,
+                            data=json.dumps(notification_context),
                             vapid_private_key=config("VAPID_PRIVATE_KEY"),
                             vapid_claims={
-                                "sub": "bphctravel@gmail.com",
-                            }
+                                "sub": "mailto:bphctravel@gmail.com",
+                            },
+                            ttl=12 * 60 * 60,
+                            verbose=True
                         )
+                        print("Notification sent successfully")
                     except WebPushException as e:
                         print(
                             f"something went wrong while sending the notification, exception message: {e}")
+
+                body = html_body.render(context)
+                message = EmailMultiAlternatives(
+                    subject=f'Request accepted',
+                    body=f'Hey {requestor.first_name}, {creator.first_name} has accepted your request to travel along with you on this trip: {post_link}\n',
+                    to=[requestor.email],
+                    from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
+                )
 
                 message.attach_alternative(body, "text/html")
                 connection = mail.get_connection()
@@ -232,6 +258,15 @@ class RejectFromMail(APIView):
                     from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
                 )
 
+                notification_context = {
+                    "type": "request rejected",
+                    "sender": creator.first_name,
+                    "departure_date": str(trip.departure_date),
+                    "destination": str(trip.destination)
+                }
+
+                # sending push notification
+                requestor = requestor.customuser
                 if requestor.get_notifs:
                     try:
                         webpush(
@@ -241,12 +276,15 @@ class RejectFromMail(APIView):
                                     "p256dh": requestor.p256dh_key,
                                     "auth": requestor.auth_key
                                 }},
-                            data=context,
+                            data=json.dumps(notification_context),
                             vapid_private_key=config("VAPID_PRIVATE_KEY"),
                             vapid_claims={
-                                "sub": "bphctravel@gmail.com",
-                            }
+                                "sub": "mailto:bphctravel@gmail.com",
+                            },
+                            ttl=12 * 60 * 60,
+                            verbose=True
                         )
+                        print("Notification sent successfully")
                     except WebPushException as e:
                         print(
                             f"something went wrong while sending the notification, exception message: {e}")
@@ -304,6 +342,15 @@ class RejectRequestView(APIView):
                     from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
                 )
 
+                notification_context = {
+                    "type": "request rejected",
+                    "sender": creator.first_name,
+                    "departure_date": str(trip.departure_date),
+                    "destination": str(trip.destination)
+                }
+
+                # sending push notification
+                requestor = requestor.customuser
                 if requestor.get_notifs:
                     try:
                         webpush(
@@ -313,12 +360,15 @@ class RejectRequestView(APIView):
                                     "p256dh": requestor.p256dh_key,
                                     "auth": requestor.auth_key
                                 }},
-                            data=context,
+                            data=json.dumps(notification_context),
                             vapid_private_key=config("VAPID_PRIVATE_KEY"),
                             vapid_claims={
-                                "sub": "bphctravel@gmail.com",
-                            }
+                                "sub": "mailto:bphctravel@gmail.com",
+                            },
+                            ttl=12 * 60 * 60,
+                            verbose=True
                         )
+                        print("Notification sent successfully")
                     except WebPushException as e:
                         print(
                             f"something went wrong while sending the notification, exception message: {e}")
@@ -381,6 +431,15 @@ class AcceptRequestView(APIView):
                     from_email=f"TravelBPHC<{settings.EMAIL_HOST_USER}>"
                 )
 
+                notification_context = {
+                    "type": "request accepted",
+                    "sender": creator.first_name,
+                    "departure_date": str(trip.departure_date),
+                    "destination": str(trip.destination)
+                }
+
+                # sending push notification
+                requestor = requestor.customuser
                 if requestor.get_notifs:
                     try:
                         webpush(
@@ -390,12 +449,15 @@ class AcceptRequestView(APIView):
                                     "p256dh": requestor.p256dh_key,
                                     "auth": requestor.auth_key
                                 }},
-                            data=context,
+                            data=json.dumps(notification_context),
                             vapid_private_key=config("VAPID_PRIVATE_KEY"),
                             vapid_claims={
-                                "sub": "bphctravel@gmail.com",
-                            }
+                                "sub": "mailto:bphctravel@gmail.com",
+                            },
+                            ttl=12 * 60 * 60,
+                            verbose=True
                         )
+                        print("Notification sent successfully")
                     except WebPushException as e:
                         print(
                             f"something went wrong while sending the notification, exception message: {e}")

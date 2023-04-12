@@ -125,12 +125,15 @@ class AllUsersView(ListAPIView):
 
 class AddSubscription(APIView):
 
+    permission_classes = [IsLoggedIn]
+
     def post(self, request):
         try:
             payload = request.data
             p256dh_key, auth_key, endpoint = payload['keys'].get(
                 'p256dh'), payload['keys'].get('auth'), payload.get('endpoint', None)
-            user = get_user(request)
+            base_user = get_user(request)
+            user = base_user.customuser
             user.p256dh_key, user.auth_key, user.endpoint, user.get_notifs = p256dh_key, auth_key, endpoint, True
             user.save()
             return Response({"success": f"registered the user with the email ID: {user.email} to the mailing list"}, status=200)
@@ -140,9 +143,12 @@ class AddSubscription(APIView):
 
 class RemoveSubscription(APIView):
 
+    permission_classes = [IsLoggedIn]
+
     def post(self, request):
         try:
-            user = get_user(request)
+            base_user = get_user(request)
+            user = base_user.customuser
             user.p256dh_key, user.auth_key, user.endpoint, user.get_notifs = None, None, None, False
             user.save()
             return Response({"success": f"unregistered the user with the email ID: {user.email} from the mailing list"}, status=200)
