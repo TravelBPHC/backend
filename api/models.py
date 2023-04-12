@@ -49,8 +49,7 @@ class Trip(models.Model):
             str(self.departure_time), '%H:%M:%S').time()
 
         if (self._state.adding == True):
-            super(Trip, self).save(*args, **kwargs)
-
+            
             channel_layer = get_channel_layer()
 
             message = {
@@ -78,7 +77,6 @@ class Trip(models.Model):
                 }
             )
         else:
-            super(Trip, self).save(*args, **kwargs)
 
             channel_layer = get_channel_layer()
 
@@ -106,6 +104,8 @@ class Trip(models.Model):
                     'value': json.dumps({'message': message})
                 }
             )
+            
+        super(Trip, self).save(*args, **kwargs)
 
     class Meta:
         ordering = ['departure_date']
@@ -135,7 +135,6 @@ class Request(models.Model):
         Send a message via a websocket to the client whenever a Request object has
         been created/modified
         '''
-        super(Request, self).save(*args, **kwargs)
         channel_layer = get_channel_layer()
         message = {
             "id": self.id,
@@ -154,3 +153,4 @@ class Request(models.Model):
                 'value': json.dumps({'message': message})
             }
         )
+        super(Request, self).save(*args, **kwargs)
