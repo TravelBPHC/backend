@@ -1,3 +1,5 @@
+import json
+from datetime import datetime as dt
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, DestroyAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,7 +9,8 @@ from .serializers import TripSerializer
 from users.permissions import IsLoggedIn
 from .models import Trip
 from django.contrib.auth.models import User
-import datetime
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 
 class AllPostsView(ListAPIView):
@@ -32,8 +35,8 @@ class AllPostsView(ListAPIView):
                         destination__icontains=globals()[field])
 
                 elif field == 'dt':
-                    dt = globals()[field]
-                    date = datetime.datetime.strptime(dt, '%Y-%m-%d').date()
+                    val = globals()[field]
+                    date = dt.strptime(val, '%Y-%m-%d').date()
 
                     queryset = queryset.filter(departure_date=date)
 
@@ -91,6 +94,16 @@ class TripCreateView(CreateAPIView):
             trip.vacancies -= 1
 
         trip.save()
+
+        # sending data via websocket
+        channel_layer = get_channel_layer()
+        message = TripSerializer(trip, many=False).data
+        async_to_sync(channel_layer.group_send)(
+            'trip_group', {
+                'type': 'trip_created',
+                'value': json.dumps({'message': message})
+            }
+        )
 
         return Response(data={'success': f'Trip from {source} to {destination} on {departure_date} created'}, status=status.HTTP_201_CREATED)
 

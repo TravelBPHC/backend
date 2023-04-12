@@ -1,3 +1,4 @@
+import json
 from django.conf import settings
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
@@ -13,6 +14,8 @@ from django.core.mail import EmailMultiAlternatives
 from django.core import mail
 from django.core.signing import Signer
 from decouple import config
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 
 class SentRequestsView(ListAPIView):
@@ -54,6 +57,16 @@ class RequestReceivedView(APIView):
         req = Request.objects.create(post_link=post_link, source=trip.source, destination=trip.destination,
                                      departure_date=trip.departure_date, departure_time=trip.departure_time, status="Unconfirmed", sender=requestor, receiver=creator, for_trip=trip)
         req.save()
+
+        # sending data via websocket
+        channel_layer = get_channel_layer()
+        message = RequestSerializer(req, many=False).data
+        async_to_sync(channel_layer.group_send)(
+            'request_group', {
+                'type': 'request_created',
+                'value': json.dumps({'message': message})
+            }
+        )
 
         signer = Signer(salt=str(settings.SECRET_KEY))
         signed_email = signer.sign_object({"email": requestor.email})
@@ -116,6 +129,16 @@ class AcceptFromMail(APIView):
                 req.save()
                 requestor.save()
 
+                # sending data via websocket
+                channel_layer = get_channel_layer()
+                message = RequestSerializer(req, many=False).data
+                async_to_sync(channel_layer.group_send)(
+                    'request_group', {
+                        'type': 'request_modified',
+                        'value': json.dumps({'message': message})
+                    }
+                )
+
                 html_body = get_template('request_accepted.html')
 
                 context = {
@@ -172,6 +195,16 @@ class RejectFromMail(APIView):
                 req.receiver = None
                 req.save()
 
+                # sending data via websocket
+                channel_layer = get_channel_layer()
+                message = RequestSerializer(req, many=False).data
+                async_to_sync(channel_layer.group_send)(
+                    'request_group', {
+                        'type': 'request_modified',
+                        'value': json.dumps({'message': message})
+                    }
+                )
+
                 html_body = get_template('request_rejected.html')
 
                 context = {
@@ -224,6 +257,16 @@ class RejectRequestView(APIView):
                 req.status = "Rejected"
                 req.receiver = None
                 req.save()
+
+                # sending data via websocket
+                channel_layer = get_channel_layer()
+                message = RequestSerializer(req, many=False).data
+                async_to_sync(channel_layer.group_send)(
+                    'request_group', {
+                        'type': 'request_modified',
+                        'value': json.dumps({'message': message})
+                    }
+                )
 
                 html_body = get_template('request_rejected.html')
 
@@ -282,6 +325,16 @@ class AcceptRequestView(APIView):
                 trip.save()
                 req.save()
                 requestor.save()
+
+                # sending data via websocket
+                channel_layer = get_channel_layer()
+                message = RequestSerializer(req, many=False).data
+                async_to_sync(channel_layer.group_send)(
+                    'request_group', {
+                        'type': 'request_modified',
+                        'value': json.dumps({'message': message})
+                    }
+                )
 
                 html_body = get_template('request_accepted.html')
 
