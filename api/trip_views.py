@@ -137,6 +137,14 @@ class TripUpdateView(APIView):
                 user = get_user(request)
                 trip = Trip.objects.get(pk=pk)
 
+                passengers = trip.users_confirmed.all()
+                if request.data.get('passengers', None) is not None:
+                    new_passengers = request.data['passengers'].split(',')
+                    for passenger in new_passengers:
+                        u = User.objects.get(email=passenger)
+                        if u.customuser not in passengers:
+                            trip.users_confirmed.add(u.customuser)
+
                 if user.id != trip.creator.id:
                     raise Exception("only the creator of a trip can edit it")
 
