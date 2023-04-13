@@ -1,5 +1,5 @@
 import json
-from datetime import datetime as dt
+from datetime import datetime
 from django.db import transaction
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, DestroyAPIView
 from rest_framework.response import Response
@@ -18,30 +18,36 @@ class AllPostsView(ListAPIView):
 
     def get_queryset(self):
 
-        queryset = Trip.objects.filter(status="Upcoming").exclude(vacancies=0)
-        fields = ['src', 'dest', 'dt']
+        try:
 
-        for field in fields:
+            queryset = Trip.objects.filter(
+                status="Upcoming").exclude(vacancies=0)
+            fields = ['src', 'dest', 'dt']
 
-            globals()[field] = self.request.query_params.get(f'{field}')
+            for field in fields:
 
-            if globals()[field]:
+                globals()[field] = self.request.query_params.get(f'{field}')
 
-                if field == 'src':
-                    queryset = queryset.filter(
-                        source__icontains=globals()[field])
+                if globals()[field]:
 
-                elif field == 'dest':
-                    queryset = queryset.filter(
-                        destination__icontains=globals()[field])
+                    if field == 'src':
+                        queryset = queryset.filter(
+                            source__icontains=globals()[field])
 
-                elif field == 'dt':
-                    val = globals()[field]
-                    date = dt.strptime(val, '%Y-%m-%d').date()
+                    elif field == 'dest':
+                        queryset = queryset.filter(
+                            destination__icontains=globals()[field])
 
-                    queryset = queryset.filter(departure_date=date)
+                    elif field == 'dt':
+                        date = datetime.strptime(
+                            globals()[field], '%Y-%m-%d').date()
 
-        return queryset
+                        queryset = queryset.filter(departure_date=date)
+
+            return queryset
+
+        except Exception as e:
+            print(f"error in filtering: {str(e)}")
 
     serializer_class = TripSerializer
 
