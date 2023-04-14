@@ -12,6 +12,7 @@ from .models import Trip
 from django.contrib.auth.models import User
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
 
 class AllPostsView(ListAPIView):
@@ -106,6 +107,18 @@ class TripCreateView(CreateAPIView):
                     trip.save()
             except Exception as e:
                 return Response(data={'while creating trip': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+            # scheduling task to mark trip as done
+            try:
+                departure_date, departure_time = datetime.strptime(
+                    departure_date, '%Y-%m-%d').date(), datetime.strptime(departure_time, '%H:%M:%S').time()
+                schedule, created = CrontabSchedule.objects.get_or_create(
+                    hour=departure_time.hour, minute=departure_time.minute, day_of_month=departure_date.day, month_of_year=departure_date.month)
+                task = PeriodicTask.objects.create(
+                    crontab=schedule, name=f"Schedule deletion of trip id: {trip.id}", one_off=True, task='api.tasks.trip_expired', args=json.dumps([trip.id]))
+            except Exception as e:
+                print(
+                    f"error while scheduling expiry task of trip no {trip.id}, exception: {e}")
 
             # sending data via websocket
             try:
