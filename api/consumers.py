@@ -19,6 +19,14 @@ class BaseConsumer(WebsocketConsumer):
             self.accept()
             self.send(text_data=str(e))
 
+    def disconnect(self, close_code):
+        self.send(
+            text_data=f"Disconnected from client with code: { {close_code}}")
+        async_to_sync(self.channel_layer.group_discard)(
+            self.group_name, self.channel_name
+        )
+        super().disconnect(close_code)
+
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
