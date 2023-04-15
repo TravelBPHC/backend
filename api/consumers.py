@@ -18,14 +18,6 @@ class BaseConsumer(WebsocketConsumer):
         except ImproperlyConfigured as e:
             self.accept()
             self.send(text_data=str(e))
-            self.disconnect(400)
-
-    def disconnect(self, close_code):
-        self.send(
-            text_data=f"Disconnected from client with code: { {close_code}}")
-        async_to_sync(self.channel_layer.group_discard)(
-            self.group_name, self.channel_name
-        )
 
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
