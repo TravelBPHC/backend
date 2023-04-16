@@ -1,4 +1,5 @@
 import json
+import traceback
 from datetime import datetime
 from django.db import transaction
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, DestroyAPIView
@@ -47,6 +48,7 @@ class AllPostsView(ListAPIView):
             return queryset
 
         except Exception as e:
+            print(traceback.format_exc())
             print(f"error in filtering: {str(e)}")
 
     serializer_class = TripSerializer
@@ -105,6 +107,7 @@ class TripCreateView(CreateAPIView):
 
                     trip.save()
             except Exception as e:
+                print(traceback.format_exc())
                 return Response(data={'while creating trip': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
             # sending data via websocket
@@ -118,11 +121,13 @@ class TripCreateView(CreateAPIView):
                     }
                 )
             except Exception as e:
+                print(traceback.format_exc())
                 print("error while sending data via websocket: ", str(e))
 
             return Response(data={'success': f'Trip from {source} to {destination} on {departure_date} created'}, status=status.HTTP_201_CREATED)
 
         except Exception as e:
+            print(traceback.format_exc())
             return Response(data={'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -157,6 +162,7 @@ class TripUpdateView(APIView):
                     raise Exception("invalid data")
 
         except Exception as e:
+            print(traceback.format_exc())
             return Response(data={"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 

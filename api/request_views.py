@@ -1,4 +1,5 @@
 import json
+import traceback
 from django.conf import settings
 from django.db import transaction
 from rest_framework.generics import ListAPIView
@@ -63,6 +64,7 @@ class RequestReceivedView(APIView):
                                              departure_date=trip.departure_date, departure_time=trip.departure_time, status="Unconfirmed", sender=requestor, receiver=creator, for_trip=trip)
                 req.save()
         except Exception as e:
+            print(traceback.format_exc())
             return Response(data={"error": f"while creating request: {str(e)}"}, status=400)
 
         # send data via websocket
@@ -76,6 +78,7 @@ class RequestReceivedView(APIView):
                 }
             )
         except Exception as e:
+            print(traceback.format_exc())
             print(f"While sending data via websocket: {str(e)}")
 
         try:
@@ -103,6 +106,7 @@ class RequestReceivedView(APIView):
                 "destination": str(trip.destination)
             }
         except Exception as e:
+            print(traceback.format_exc())
             print(
                 f"While creating context for email and push notification: {str(e)}")
 
@@ -123,10 +127,10 @@ class RequestReceivedView(APIView):
                         "sub": "mailto:bphctravel@gmail.com",
                     },
                     ttl=12 * 60 * 60,
-                    verbose=True
                 )
                 print("Notification sent successfully")
             except WebPushException as e:
+                print(traceback.format_exc())
                 print(f"While sending push notification: {e}")
 
         # send email
@@ -143,6 +147,7 @@ class RequestReceivedView(APIView):
             connection = mail.get_connection()
             connection.send_messages([message])
         except Exception as e:
+            print(traceback.format_exc())
             print(f"While sending email: {str(e)}")
 
         return Response(data={"Message": f"Request created, mail and notification sent to {creator.email}"})
@@ -224,10 +229,10 @@ class AcceptFromMail(APIView):
                                 "sub": "mailto:bphctravel@gmail.com",
                             },
                             ttl=12 * 60 * 60,
-                            verbose=True
                         )
                         print("Notification sent successfully")
                     except WebPushException as e:
+                        print(traceback.format_exc())
                         print(
                             f"something went wrong while sending the notification, exception message: {e}")
 
@@ -329,10 +334,10 @@ class RejectFromMail(APIView):
                                 "sub": "mailto:bphctravel@gmail.com",
                             },
                             ttl=12 * 60 * 60,
-                            verbose=True
                         )
                         print("Notification sent successfully")
                     except WebPushException as e:
+                        print(traceback.format_exc())
                         print(
                             f"something went wrong while sending the notification, exception message: {e}")
 
@@ -344,6 +349,7 @@ class RejectFromMail(APIView):
             return Response(data={"error": "Something went wrong"}, status=status.HTTP_400_BAD_REQUEST)
 
         else:
+            print(traceback.format_exc())
             return Response(data={"error": "already responded to this request"}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -376,6 +382,7 @@ class RejectRequestView(APIView):
                     req.receiver = None
                     req.save()
             except Exception as e:
+                print(traceback.format_exc())
                 return Response(data={"error": f"while rejecting request: {str(e)}"}, status=400)
 
             # sending data via websocket
@@ -389,6 +396,7 @@ class RejectRequestView(APIView):
                     }
                 )
             except Exception as e:
+                print(traceback.format_exc())
                 print(f"websocket error: {str(e)}")
 
             try:
@@ -421,6 +429,7 @@ class RejectRequestView(APIView):
                 }
 
             except Exception as e:
+                print(traceback.format_exc())
                 print("error while generating context: ", str(e))
 
             # sending push notification
@@ -441,10 +450,10 @@ class RejectRequestView(APIView):
                             "sub": "mailto:bphctravel@gmail.com",
                         },
                         ttl=12 * 60 * 60,
-                        verbose=True
                     )
                     print("Notification sent successfully")
                 except WebPushException as e:
+                    print(traceback.format_exc())
                     print(f"error while sending push notification: {e}")
 
             try:
@@ -452,11 +461,13 @@ class RejectRequestView(APIView):
                 connection = mail.get_connection()
                 connection.send_messages([message])
             except Exception as e:
+                print(traceback.format_exc())
                 print("error while sending email: ", str(e))
 
             return Response(data={"success": f"Request rejected"}, status=status.HTTP_200_OK)
 
         except Exception as e:
+            print(traceback.format_exc())
             return Response(data={"error": f"{str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -495,6 +506,7 @@ class AcceptRequestView(APIView):
                     req.save()
                     requestor.save()
             except Exception as e:
+                print(traceback.format_exc())
                 return Response(data={"error": f"while accepting request: {str(e)}"}, status=400)
 
             # sending data via websocket
@@ -508,6 +520,7 @@ class AcceptRequestView(APIView):
                     }
                 )
             except Exception as e:
+                print(traceback.format_exc())
                 print(f"websocket error: {str(e)}")
 
             try:
@@ -538,6 +551,7 @@ class AcceptRequestView(APIView):
                     "destination": str(trip.destination)
                 }
             except Exception as e:
+                print(traceback.format_exc())
                 print("error while generating context: ", str(e))
 
             # sending push notification
@@ -557,10 +571,10 @@ class AcceptRequestView(APIView):
                             "sub": "mailto:bphctravel@gmail.com",
                         },
                         ttl=12 * 60 * 60,
-                        verbose=True
                     )
                     print("Notification sent successfully")
                 except WebPushException as e:
+                    print(traceback.format_exc())
                     print(f"error while sending the notification: {e}")
 
             try:
@@ -568,9 +582,11 @@ class AcceptRequestView(APIView):
                 connection = mail.get_connection()
                 connection.send_messages([message])
             except Exception as e:
+                print(traceback.format_exc())
                 print("error while sending email: ", str(e))
 
             return Response(data={"success": f"Request accepted"}, status=status.HTTP_200_OK)
 
         except Exception as e:
+            print(traceback.format_exc())
             return Response(data={"error": f"{str(e)}"}, status=status.HTTP_400_BAD_REQUEST)

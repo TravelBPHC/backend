@@ -1,3 +1,6 @@
+import jwt
+import requests
+import traceback
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -8,22 +11,18 @@ from decouple import config
 from .utils import get_user
 from .serializers import CustomUserSerializer, UserSerializer
 from google.auth.transport import requests as google_requests
-import requests
 from google.oauth2 import id_token
 from random import randint
 from .permissions import IsLoggedIn
 from decouple import config
-import google.auth.transport.requests
-import jwt
 
 
 class AuthenticateView(APIView):
 
     def post(self, request):
 
-        code = request.data.get('code', None)
-
         try:
+            code = request.data.get('code', None)
 
             data = {
                 'code': code,
@@ -46,7 +45,7 @@ class AuthenticateView(APIView):
 
             qs = User.objects.filter(email=email)
 
-            if (len(qs) == 0):
+            if (qs.count() == 0):
                 password = str(
                     hash(email + first_name + str(randint(1, 1000) * randint(1, 1000))))
 
@@ -86,6 +85,7 @@ class AuthenticateView(APIView):
                 return response
 
         except Exception as e:
+            print(traceback.format_exc())
             return Response(data={"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -130,19 +130,15 @@ class AddSubscription(APIView):
     def post(self, request):
         try:
             payload = request.data
-            print(type(payload))
-            print(payload['keys'].get(
-                'p256dh'))
-            print(payload['keys'].get('auth'))
             p256dh_key, auth_key, endpoint = payload['keys'].get(
                 'p256dh'), payload['keys'].get('auth'), payload.get('endpoint', None)
-            print(payload.get('endpoint', None))
             base_user = get_user(request)
             user = base_user.customuser
             user.p256dh_key, user.auth_key, user.endpoint, user.get_notifs = p256dh_key, auth_key, endpoint, True
             user.save()
             return Response({"success": f"registered the user with the email ID: {user.user.email} to the mailing list"}, status=200)
         except Exception as e:
+            print(traceback.format_exc())
             return Response({"error": str(e)}, status=400)
 
 
@@ -158,4 +154,5 @@ class RemoveSubscription(APIView):
             user.save()
             return Response({"success": f"unregistered the user with the email ID: {user.email} from the mailing list"}, status=200)
         except Exception as e:
+            print(traceback.format_exc())
             return Response({"error": str(e)}, status=400)
