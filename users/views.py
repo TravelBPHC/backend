@@ -148,10 +148,9 @@ class RemoveSubscription(APIView):
 
     def post(self, request):
         try:
-            base_user = get_user(request)
-            user = base_user.customuser
-            user.p256dh_key, user.auth_key, user.endpoint, user.get_notifs = None, None, None, False
-            user.save()
+            user = get_user(request)
+            user.customuser.p256dh_key, user.customuser.auth_key, user.customuser.endpoint, user.customuser.get_notifs = None, None, None, False
+            user.customuser.save()
             return Response({"success": f"unregistered the user with the email ID: {user.email} from the mailing list"}, status=200)
         except Exception as e:
             print(traceback.format_exc())
